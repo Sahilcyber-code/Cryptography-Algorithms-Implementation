@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text Encryption Project</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header>
+      <div>
+        <h1>Text Encryption Project</h1>
+        <p>Secure AES, DES and RSA encryption with comparison and safe key handling.</p>
+      </div>
+      <div class="note-banner">Keys and secrets are never stored by the server; only operation metadata is logged.</div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab-button active" data-tab="symmetric">AES / DES</button>
+      <button class="tab-button" data-tab="rsa">RSA</button>
+      <button class="tab-button" data-tab="hybrid">Hybrid</button>
+      <button class="tab-button" data-tab="compare">Compare</button>
+    </nav>
+
+    <main>
+      <section class="panel" id="symmetric-panel">
+        <h2>Symmetric Encryption</h2>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="symmetric-algo">Algorithm</label>
+            <select id="symmetric-algo">
+              <option value="aes">AES-256-GCM</option>
+              <option value="des">DES-CBC</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="symmetric-secret">Secret / Passphrase</label>
+            <input id="symmetric-secret" type="password" placeholder="Enter passphrase" />
+          </div>
+          <div class="form-group full-width">
+            <label for="symmetric-text">Plaintext</label>
+            <textarea id="symmetric-text" rows="4" placeholder="Enter text to encrypt"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label for="symmetric-output">Ciphertext</label>
+            <textarea id="symmetric-output" rows="4" readonly placeholder="Encrypted output appears here"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label for="symmetric-auth-tag">Auth Tag (GCM)</label>
+            <textarea id="symmetric-auth-tag" rows="2" readonly placeholder="Authentication tag (base64) appears here"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="symmetric-iv">Initialization Vector (IV)</label>
+            <input id="symmetric-iv" type="text" placeholder="Leave blank to generate automatically" />
+          </div>
+          <div class="form-group full-width buttons-row">
+            <button id="encrypt-button">Encrypt</button>
+            <button id="decrypt-button">Decrypt</button>
+            <button id="clear-symmetric">Clear</button>
+          </div>
+        </div>
+        <div class="tips">
+          <strong>Secure key handling:</strong> Use strong passphrases, avoid reusing IVs, and prefer AES over DES for sensitive data.
+        </div>
+      </section>
+
+      <section class="panel hidden" id="rsa-panel">
+        <h2>RSA Encryption</h2>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="rsa-modulus">Key size</label>
+            <select id="rsa-modulus">
+              <option value="2048">2048 bits</option>
+              <option value="3072">3072 bits</option>
+              <option value="4096">4096 bits</option>
+            </select>
+          </div>
+          <div class="form-group full-width buttons-row">
+            <button id="generate-keys">Generate RSA Keys</button>
+            <button id="clear-rsa">Clear</button>
+          </div>
+          <div class="form-group full-width">
+            <label for="rsa-public">Public Key</label>
+            <textarea id="rsa-public" rows="6" placeholder="Generated public key"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label for="rsa-private">Private Key</label>
+            <textarea id="rsa-private" rows="6" placeholder="Generated private key"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label for="rsa-text">Plaintext (for encryption)</label>
+            <textarea id="rsa-text" rows="4" placeholder="Enter plaintext to encrypt"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label for="rsa-ciphertext">Ciphertext (for decrypting or view encrypted output)</label>
+            <textarea id="rsa-ciphertext" rows="4" placeholder="Encrypted base64 ciphertext will appear here; paste ciphertext here to decrypt"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label for="rsa-decrypted-output">Decrypted output</label>
+            <textarea id="rsa-decrypted-output" rows="4" readonly placeholder="Decrypted plaintext appears here after decryption"></textarea>
+          </div>
+          <div class="form-group full-width buttons-row">
+            <button id="rsa-encrypt-button">Encrypt with Public Key</button>
+            <button id="rsa-decrypt-button">Decrypt with Private Key</button>
+          </div>
+        </div>
+        <div class="tips">
+          <strong>RSA usage:</strong> Use the public key for encryption and the private key for decryption. Never share your private key.
+        </div>
+      </section>
+
+      <section class="panel hidden" id="hybrid-panel">
+        <h2>Hybrid Encryption (AES + RSA)</h2>
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label for="hybrid-public">Recipient Public Key (PEM)</label>
+            <textarea id="hybrid-public" rows="6" placeholder="Paste recipient's public key here"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label for="hybrid-plaintext">Plaintext</label>
+            <textarea id="hybrid-plaintext" rows="4" placeholder="Enter plaintext to encrypt"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label for="hybrid-ciphertext">Ciphertext (base64)</label>
+            <textarea id="hybrid-ciphertext" rows="4" readonly placeholder="Encrypted AES ciphertext (base64)"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label for="hybrid-encrypted-key">Encrypted AES Key (base64)</label>
+            <textarea id="hybrid-encrypted-key" rows="3" readonly placeholder="RSA-encrypted AES key (base64)"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label for="hybrid-auth-tag">Auth Tag (base64)</label>
+            <textarea id="hybrid-auth-tag" rows="2" readonly placeholder="AES-GCM auth tag (base64)"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="hybrid-iv">IV (hex)</label>
+            <input id="hybrid-iv" type="text" placeholder="Initialization Vector (hex)" readonly />
+          </div>
+          <div class="form-group full-width buttons-row">
+            <button id="hybrid-encrypt">Hybrid Encrypt</button>
+            <button id="hybrid-clear">Clear</button>
+          </div>
+
+          <hr />
+
+          <div class="form-group full-width">
+            <label for="hybrid-private">Your Private Key (PEM)</label>
+            <textarea id="hybrid-private" rows="6" placeholder="Paste your private key to decrypt"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label for="hybrid-input-ciphertext">Ciphertext to decrypt (base64)</label>
+            <textarea id="hybrid-input-ciphertext" rows="4" placeholder="Paste ciphertext here to decrypt"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label for="hybrid-input-encrypted-key">Encrypted AES Key (base64)</label>
+            <textarea id="hybrid-input-encrypted-key" rows="3" placeholder="Paste RSA-encrypted AES key here"></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label for="hybrid-input-auth-tag">Auth Tag (base64)</label>
+            <textarea id="hybrid-input-auth-tag" rows="2" placeholder="Paste AES-GCM auth tag here"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="hybrid-input-iv">IV (hex)</label>
+            <input id="hybrid-input-iv" type="text" placeholder="IV (hex)" />
+          </div>
+          <div class="form-group full-width buttons-row">
+            <button id="hybrid-decrypt">Hybrid Decrypt</button>
+            <button id="hybrid-clear-decrypt">Clear Decrypt</button>
+          </div>
+          <div class="form-group full-width">
+            <label for="hybrid-decrypted-output">Decrypted Output</label>
+            <textarea id="hybrid-decrypted-output" rows="4" readonly placeholder="Decrypted plaintext appears here"></textarea>
+          </div>
+        </div>
+        <div class="tips">
+          <strong>Hybrid:</strong> AES encrypts the message; RSA encrypts the AES key. Keep private keys secret.
+        </div>
+      </section>
+
+      <section class="panel hidden" id="compare-panel">
+        <h2>Algorithm Comparison</h2>
+        <div class="compare-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Algorithm</th>
+                <th>Type</th>
+                <th>Strength</th>
+                <th>Use Case</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="compare-body"></tbody>
+          </table>
+        </div>
+        <div class="summary">
+          <p>Use AES for modern symmetric encryption. DES is included for legacy compatibility, but it is not secure for production. RSA is ideal for key exchange and asymmetric encryption.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
